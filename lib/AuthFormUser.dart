@@ -1,0 +1,875 @@
+import 'dart:io';
+
+import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_alaqy/user_main.dart';
+
+import 'numberPhone.dart';
+import 'user_mainx.dart';
+
+// import 'fucks.dart';
+// import 'user_image_picker.dart';
+
+class AuthFormUser extends StatefulWidget {
+  const AuthFormUser(this.submitFn, this.isLoading, this.supx, this.phone,
+      this.koko, this.userx);
+
+  final void Function(
+    String email,
+    String password,
+    //  String userName,
+    //  File? image,
+    bool isLogin,
+    BuildContext ctx,
+  ) submitFn;
+  final bool isLoading;
+  final bool supx;
+  final String phone;
+  final bool koko;
+  final String userx;
+  @override
+  AuthFormUserState createState() => AuthFormUserState();
+}
+
+class AuthFormUserState extends State<AuthFormUser> {
+  var oldo;
+  bool? loading;
+  bool knok = false;
+  bool eye = true;
+
+  final _phoneController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  final _formKey = GlobalKey<FormState>();
+  var _isLogin = true;
+  var _userEmail = '';
+  var _userName = '';
+  var _userPassword = '';
+  var _userImageFile;
+
+  void _pickedImage(File? image) {
+    _userImageFile = image;
+  }
+
+  void _trySubmit() async {
+    setState(() {
+      loading = true;
+    });
+    final mobile = _phoneController.text.trim().startsWith('+')
+        ? _phoneController.text.trim()
+        : '+2${_phoneController.text.trim()}';
+    print(mobile);
+    //  final mobile = _phoneController.text.trim();
+    final numberState = await FirebaseFirestore.instance
+        .collection('customer_details')
+        .where('phone_num', isEqualTo: mobile)
+        .get();
+    final numberStatez = await FirebaseFirestore.instance
+        .collection('customer_details')
+        .where('phone_num',
+            isEqualTo: widget.phone.startsWith('+')
+                ? widget.phone
+                : '+2${widget.phone}')
+        .get();
+    final copa = knok == true || widget.koko == true
+        ? numberStatez.docs.isNotEmpty
+            ? numberStatez.docs.first
+                .data()['basicemailx']
+                .toString()
+                .split('@')
+                .first
+            : 'numberStatez.docs.first.id'
+        : numberState.docs.isNotEmpty
+            ? (numberState.docs.first.data()['basicemail'])
+                .toString()
+                .split('@')
+                .first
+            : 'numberState.docs.first.id';
+
+    if (numberState.docs.isNotEmpty && widget.koko == false) {
+      final flag = (numberState.docs.first.data()['activated']);
+      final username = (numberState.docs.first.data()['basicemail']);
+
+      if (flag == false) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            duration: Duration(seconds: 4),
+            content: const Text(
+                'هذا الرقم لديه حساب بيزنس يمكنك الرجوع و الدخول كبيزنس فقط '),
+            backgroundColor: Theme.of(context).errorColor,
+          ),
+        );
+        setState(() {
+          loading = false;
+        });
+        return;
+      }
+
+      final cops = knok == true || widget.koko == true
+          ? numberStatez.docs.first
+              .data()['basicemailx']
+              .toString()
+              .split('@')
+              .first
+          : (numberState.docs.first.data()['basicemail'])
+              .toString()
+              .split('@')
+              .first;
+      setState(() {
+        _userEmail = cops;
+      });
+      print(_userEmail);
+    }
+    // if (widget.koko == false && widget.supx == false) {
+    //   if ((widget.supx == false && numberState.docs.isEmpty)) {
+    //     //||(numberStatez.docs.isNotEmpty && widget.koko == true)) {
+    //     setState(() {
+    //       loading = false;
+    //     });
+    //     ScaffoldMessenger.of(context).showSnackBar(
+    //       SnackBar(
+    //         content: const Text('this number dont belong to any user account.'),
+    //         backgroundColor: Theme.of(context).errorColor,
+    //       ),
+    //     );
+    //     return;
+    //   }
+    // } else
+    if (numberStatez.docs.isEmpty && widget.koko == true) {
+      setState(() {
+        loading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          duration: Duration(seconds: 1),
+          content: const Text('هذا الرقم لا ينتمي لأي حساب عميل'),
+          backgroundColor: Theme.of(context).errorColor,
+        ),
+      );
+      return;
+    }
+    if (numberState.docs.isEmpty &&
+        widget.koko == false &&
+        widget.supx == false) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          duration: Duration(seconds: 1),
+          content: const Text(' الرقم لا ينتمي لأي حساب عميل'),
+          backgroundColor: Theme.of(context).errorColor,
+        ),
+      );
+    }
+    final isValid = _formKey.currentState?.validate();
+    FocusScope.of(context).unfocus();
+
+    // if (_userImageFile == null && _isLogin) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(
+    //       content: const Text('Please pick an image.'),
+    //       backgroundColor: Theme.of(context).errorColor,
+    //     ),
+    //   );
+    //   return;
+    // }
+    // if (_userPassword == '') {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(
+    //       content: const Text('Please Enter password.'),
+    //       backgroundColor: Theme.of(context).errorColor,
+    //     ),
+    //   );
+    //   FocusScope.of(context).unfocus();
+
+    //   return;
+    // }
+    final lol = knok == true || widget.koko == true
+        ? '${copa}x@alaqy.com'
+//'${numberStatez.docs.first.data()['name']}x@alaqy.com'
+        : numberState.docs.isNotEmpty
+            ? numberState.docs.first.data()['basicemailx']
+            : '';
+    print(
+        "لالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالالا");
+    print(lol);
+    print(widget.koko);
+
+    if (isValid == true) {
+      _formKey.currentState?.save();
+      widget.supx && !widget.koko
+          ? widget.submitFn(
+              '${_userEmail.trim().replaceAll(RegExp(r' '), '_').replaceAll(RegExp(r'@'), '_')}@alaqy.com',
+              _userPassword.trim(),
+              //   _userName.trim(),
+              //   _userImageFile,
+              _isLogin,
+              context,
+            )
+          : (numberState.docs.isNotEmpty || numberStatez.docs.isNotEmpty)
+              ? widget.submitFn(
+                  lol, // numberState.docs.first.data()['basicemail'],
+                  _userPassword.trim(),
+                  //   _userName.trim(),
+                  //   _userImageFile,
+                  _isLogin,
+                  context,
+                )
+              : null;
+      (numberState.docs.isNotEmpty || numberStatez.docs.isNotEmpty)
+          ? print('11111111111111111111111111111111111111111')
+          : print('222222222222222222222222222');
+      if (numberState.docs.isEmpty && !widget.supx) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            duration: Duration(seconds: 1),
+            content: const Text(' الرقم لا ينتمي لأي حساب عميل'),
+            backgroundColor: Theme.of(context).errorColor,
+          ),
+        );
+      }
+      FirebaseAuth.instance.userChanges().listen((User? user) {
+        if (user == null) {
+          setState(() {
+            loading = true;
+          });
+          // Future.delayed(const Duration(seconds: 2), (() {
+          //   setState(() {
+          //     loading = true;
+          //   });
+          // }));
+          return;
+          //   SplashScreen();
+        }
+        setState(() {
+          loading = true;
+        });
+        try {
+          setState(() {
+            loading = true;
+          });
+        } on HttpException catch (err) {
+          // setState(() {
+          //   oldo = false;
+          //   loading = false;
+          // });
+          var errMessage = 'Authentication failed';
+          if (err.toString().contains('EMAIL_EXISTS')) {
+            errMessage = 'هذا الاسم قد تم استخدامه من قبل';
+          } else if (err.toString().contains('INVALID_EMAIL')) {
+            errMessage = '@ غير مسموح باستخدام الحرف';
+          } else if (err.toString().contains('Badly_Formatted')) {
+            errMessage = '@ غير مسموح باستخدام الحرف';
+          } else if (err.toString().contains('WEAK_PASSWORD')) {
+            errMessage = 'كلمة المرور ضعيفة';
+          } else if (err
+              .toString()
+              .contains('firebase_auth/network-request-failed')) {
+            errMessage = 'خطا في الوصول الي الشبكة';
+          } else if (err.toString().contains('EMAIL_NOT_FOUND')) {
+            errMessage = 'لم نجد مستخدم بهذا الاسم';
+          } else if (err.toString().contains('wrong-password')) {
+            errMessage = 'كلمة المرور غير صحيحة';
+          } else {
+            errMessage = 'محاولة فاشلة .. الرجاء المحاولة مرة اخرى';
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              duration: Duration(seconds: 1),
+              content: Text(errMessage),
+              backgroundColor: Theme.of(context).errorColor,
+            ),
+          );
+          print('User is currently signed out!');
+          setState(() {
+            oldo = false;
+            loading = false;
+          });
+        }
+
+        if (_userEmail == '' && !widget.supx) {
+          setState(() {
+            loading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              duration: Duration(seconds: 1),
+              content: const Text(' الرقم لا ينتمي لأي حساب عميل'),
+              backgroundColor: Theme.of(context).errorColor,
+            ),
+          );
+          setState(() {
+            loading = false;
+          });
+          print('User is currently signed out!');
+          return;
+        } else if (numberState.docs.isEmpty && !widget.supx) {
+          //  if (numberState.docs.isEmpty && !widget.supx) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              duration: Duration(seconds: 1),
+              content: const Text(
+                  'هذا الرقم لم يتمم عملية التسجيل .. الرجاء اعادة التسجيل من جديد'),
+              backgroundColor: Theme.of(context).errorColor,
+            ),
+          );
+          setState(() {
+            loading = false;
+          });
+          return;
+        } else {
+          //   if (numberState.docs.isNotEmpty && widget.supx == false) {
+          if (numberState.docs.isNotEmpty) {
+            final uidq = (numberState.docs.first.data()['first_uid']);
+            if (widget.supx == false) {
+              FirebaseFirestore.instance
+                  .collection('customer_details')
+                  .doc(uidq)
+                  .update({
+                'businesslast': false,
+              });
+            }
+          }
+          if (_userPassword.trim().isEmpty || _userPassword.trim().length < 6) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                duration: Duration(seconds: 2),
+                content: Text(
+                    'كلمة المرور يجب أن تكون مكونة من 6 حروف أو أرقام على الأقل'),
+                backgroundColor: Theme.of(context).errorColor,
+              ),
+            );
+            setState(() {
+              loading == false;
+              oldo = false;
+            });
+            FocusScope.of(context).unfocus();
+
+            return;
+          }
+          if (_userEmail.trim().isEmpty || _userEmail.trim().length < 3) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                duration: Duration(seconds: 2),
+                content: Text(
+                    'إسم المستخدم يجب أن يكون مكون من ثلاث حروف على الأقل'),
+                backgroundColor: Theme.of(context).errorColor,
+              ),
+            );
+            setState(() {
+              loading == false;
+              oldo = false;
+            });
+            FocusScope.of(context).unfocus();
+
+            return;
+          } else
+            widget.supx || widget.koko
+                ? // Future.delayed(const Duration(seconds: 2), (() {
+                Navigator.of(context).pushReplacement(MaterialPageRoute(
+                    builder: (ctx) => const UserMainx('none')))
+                //    }))
+                : Navigator.of(context).pushReplacement(MaterialPageRoute(
+                    builder: (ctx) => const UserMain('none')));
+          print('$user');
+          //    SystemNavigator.pop();
+          //      SystemNavigator.routeInformationUpdated(location: '/');
+          //   Navigator.of(context).pushReplacementNamed(MyApp.routeName);
+          // Navigator.of(context).restorablePushNamedAndRemoveUntil(
+          //     MyApp.routeName, (route) => false);
+
+          //   RestartWidget.restartApp(context);
+        }
+      });
+      //   makePostRequest();
+    }
+
+    setState(() {
+      loading = false;
+    });
+  }
+// void wrongpass() async {ScaffoldMessenger.of(context).showSnackBar(
+//                                   SnackBar(
+//                                     duration: Duration(seconds: 2),
+//                                     content: Text(
+//                                       'كلمة المرور يجب أن تكون مكونة من خمس حروف أو أرقام على الأقل'
+//                                     ),
+//                                     backgroundColor:
+//                                         Theme.of(context).errorColor,
+//                                   ),
+//                                 );
+//  setState(() {
+//                       loading == false;
+//                       oldo = false;
+//                     });}
+
+  @override
+  Widget build(BuildContext context) {
+    //  final oppa = Provider.of<Auth>(context, listen: false).userId;
+
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          //   vertical: 5,
+          horizontal: 30,
+        ),
+        //    margin: const EdgeInsets.all(20),
+//         child:
+// SingleChildScrollView(
+        // child: Padding(
+        //   padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              const SizedBox(height: 3),
+              widget.supx || widget.userx == 'result.user!.uidx'
+                  ? const SizedBox(height: 30)
+                  : const SizedBox(),
+              widget.supx || widget.userx == 'result.user!.uidx'
+                  ? Center(
+                      child: SizedBox(
+                          //   height: 100,
+                          //   width: double.infinity,
+                          child: Image.asset(
+                      'assets/alaqy.jpeg',
+                      fit: BoxFit.contain,
+                    )))
+                  : const SizedBox(),
+              widget.supx || widget.userx == 'result.user!.uidx'
+                  ? const SizedBox(height: 50)
+                  : const SizedBox(),
+              widget.koko ? const SizedBox(height: 100) : const SizedBox(),
+              widget.supx
+                  ? Center(
+                      child: Text(
+                      !widget.koko ? 'بيانات العميل' : "تعديل البيانات",
+                      style:
+                          TextStyle(fontFamily: 'Tajawal', color: Colors.black),
+                    ))
+                  : widget.userx == 'result.user!.uidx'
+                      ? const Center(
+                          child: Text(
+                          'هذا الرقم لديه حساب بالفعل',
+                          style: TextStyle(
+                              fontFamily: 'Tajawal', color: Colors.black),
+                        ))
+                      : const SizedBox(),
+              widget.koko ? const SizedBox(height: 55) : const SizedBox(),
+              const SizedBox(),
+              // Text(widget.phone),
+              // if (_isLogin) UserImagePicker(_pickedImage),
+              widget.supx || widget.userx == 'result.user!.uidx'
+                  ? const SizedBox(height: 50)
+                  : const SizedBox(),
+              //     if (knok || widget.koko == true)
+              TextFormField(
+                //   initialValue: _initValues['phone'],
+                keyboardType: TextInputType.phone,
+                textAlign: TextAlign.center,
+                readOnly:
+                    widget.userx == 'result.user!.uidx' ? true : widget.supx,
+
+                decoration: InputDecoration(
+                  prefix: Text('+2'),
+                  label: Center(
+                      child: Text(
+                    'رقم الموبايل',
+                    style: TextStyle(
+                        fontFamily: 'Tajawal',
+                        color: Color.fromARGB(48, 0, 0, 0)),
+                  )),
+// helperStyle: TextStyle(),
+                  enabledBorder: OutlineInputBorder(
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      borderSide: BorderSide(color: Colors.grey.shade200)),
+                  focusedBorder: OutlineInputBorder(
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      borderSide: BorderSide(color: Colors.grey.shade300)),
+                  filled: true, //_phoneController.text == '' ? true : false,
+                  fillColor:
+                      (widget.userx == 'result.user!.uidx' || widget.supx)
+                          ? Colors.grey.shade200
+                          : Colors.white,
+                  // hintText: "Phone Number"
+                ),
+                controller: _phoneController,
+                validator: (value) {
+                  if (value != null) {
+                    return (value.isEmpty) ? 'من فضلك أدخل رقم موبايل' : null;
+                  }
+                },
+              ),
+              widget.koko ? const SizedBox(height: 20) : const SizedBox(),
+              if (widget.supx && widget.koko == false)
+                const SizedBox(height: 15),
+
+              if (widget.supx && widget.koko == false)
+                TextFormField(
+                  key: const ValueKey('email'),
+                  //   initialValue: _userEmail,
+                  textAlign: TextAlign.center,
+
+                  autocorrect: false,
+                  textCapitalization: TextCapitalization.none,
+                  enableSuggestions: false,
+                  validator: (value) {
+                    if (value != null) {
+                      return (value.isEmpty)
+                          ? 'من فضلك قم بإدخال إسم مناسب'
+                          : null;
+                    }
+                  },
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                      floatingLabelAlignment: FloatingLabelAlignment.center,
+                      enabledBorder: OutlineInputBorder(
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(8)),
+                          borderSide: BorderSide(color: Colors.grey.shade200)),
+                      focusedBorder: OutlineInputBorder(
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(8)),
+                          borderSide: BorderSide(color: Colors.grey.shade300)),
+                      filled: true,
+                      fillColor: Colors.white,
+                      //  labelText: widget.koko ? 'enter new Password' : 'Password',
+                      label: Center(
+                        //   labelText:
+                        child: knok == true || widget.koko == true
+                            ? Text('من فضلك قم بإدخال إسم مناسب')
+                            : Text(
+                                'إسم المستخدم',
+                                style: TextStyle(
+                                    fontFamily: 'Tajawal',
+                                    color: Color.fromARGB(48, 0, 0, 0)),
+                              ),
+                      )),
+                  //   obscureText: true,
+
+                  onSaved: (value) {
+                    if (value != null) {
+                      _userEmail = value;
+                    }
+                  },
+                ),
+              ////////////////////////////////// if (widget.supx)
+              //   TextFormField(
+              //     key: const ValueKey('username'),
+              //     autocorrect: true,
+              //     textCapitalization: TextCapitalization.words,
+              //     enableSuggestions: false,
+              //     validator: (value) {
+
+              //       if (value != null) {
+              //         return (value.isEmpty || value.length < 4)
+              //             ? 'Please enter at least 4 characters'
+              //             : null;
+              //       }
+              //     },
+              //     decoration: const InputDecoration(labelText: 'Username'),
+              //     onSaved: (value) {
+              //       if (value != null) {
+              //         _userName = value;
+              //       }
+              //     },
+              //   ),
+              const SizedBox(height: 8),
+              TextFormField(
+                key: const ValueKey('password'),
+                textAlign: TextAlign.center,
+                validator: (value) {
+                  if (value != null) {
+                    return (value.isEmpty || value.length < 6)
+                        ? 'كلمة المرور مكونة من 6 حروف أو أرقام على الأقل'
+                        : null;
+                  }
+                  //         return null;
+                },
+                decoration: InputDecoration(
+                  prefixIcon: IconButton(
+                    color: eye == true ? Colors.grey : Colors.amber,
+                    icon: Icon(Icons.remove_red_eye_outlined),
+                    onPressed: () {
+                      setState(() {
+                        eye = !eye;
+                      });
+                    },
+                  ),
+                  label: Center(
+                      child: widget.koko == false
+                          ? Text(
+                              "كلمة المرور",
+                              style: TextStyle(
+                                  fontFamily: 'Tajawal',
+                                  color: Color.fromARGB(48, 0, 0, 0)),
+                            )
+                          : Text(
+                              'إدخال كلمة مرور جديدة',
+                              style: TextStyle(
+                                  fontFamily: 'Tajawal',
+                                  color: Color.fromARGB(48, 0, 0, 0)),
+                            )),
+                  floatingLabelAlignment: FloatingLabelAlignment.center,
+                  enabledBorder: OutlineInputBorder(
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      borderSide: BorderSide(color: Colors.grey.shade200)),
+                  focusedBorder: OutlineInputBorder(
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      borderSide: BorderSide(color: Colors.grey.shade300)),
+                  filled: true,
+                  fillColor: Colors.white,
+                  //  labelText: widget.koko ? 'enter new Password' : 'Password',
+                ),
+                obscureText: eye,
+                onSaved: (value) {
+                  if (value != null) {
+                    _userPassword = value;
+                    print(_userPassword);
+                  }
+                },
+              ),
+              // Container(
+              //     alignment: Alignment.centerRight,
+              //     child: IconButton(
+              //       color: eye == true ? Colors.grey : Colors.amber,
+              //       icon: Icon(Icons.remove_red_eye_outlined),
+              //       onPressed: () {
+              //         setState(() {
+              //           eye = !eye;
+              //         });
+              //       },
+              //     )),
+              const SizedBox(height: 17),
+              //     if (widget.isLoading) const CircularProgressIndicator(),
+              //   if (!widget.isLoading)
+              // loading == true //     (widget.isLoading)
+              //     ? const CircularProgressIndicator()
+              //     : const SizedBox(),
+              ElevatedButton(
+                  style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.resolveWith(
+                          (states) => Color.fromARGB(255, 253, 202, 0))),
+                  onPressed: () {
+                    setState(() {
+                      loading == true;
+                      oldo = true;
+                    });
+                    if (_userPassword.isEmpty || _userPassword.length < 5) {}
+                    // Future.delayed(const Duration(seconds: 2), (() {
+                    _trySubmit();
+                    //  }));
+                    FocusManager.instance.primaryFocus?.unfocus();
+                  },
+                  child: SizedBox(
+                      width: double.infinity,
+                      child: Center(
+                        child: Text(
+                          !widget.supx ? 'دخول إلى الحساب' : 'حفظ البيانات',
+                          style: TextStyle(
+                              fontFamily: 'Tajawal', color: Colors.black),
+                          //  style: TextStyle(color: Colors.black),
+                        ),
+                      ))),
+
+              (!widget.supx) && widget.userx != 'result.user!.uidx'
+                  ? TextButton(
+                      //            textColor: Theme.of(context).primaryColor, LoginScreen('customer')
+                      child: const Text(
+                        'إنشاء حساب',
+                        style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 59, 53, 53)),
+                      ),
+                      onPressed: () {
+                        print('check');
+                        //  Navigator.of(context).pop();
+                        Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    LoginScreen('customer', false)));
+                      },
+                    )
+                  // : TextButton(
+                  //     //            textColor: Theme.of(context).primaryColor, LoginScreen('customer')
+                  //     child: const Text('back'),
+                  //     onPressed: () {
+                  //       Navigator.of(context).pushReplacementNamed('/');
+                  //     },
+                  //   ),
+                  : const SizedBox(),
+              !widget.koko && !widget.supx
+                  ? const SizedBox(
+                      height: 15,
+                    )
+                  : const SizedBox(),
+              !widget.koko && !widget.supx
+                  ? TextButton(
+                      child: const Text(
+                        'نسيت كلمة المرور؟',
+                        style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            color: Color.fromARGB(175, 59, 53, 53)),
+                      ),
+                      onPressed: () async {
+                        // if (_phoneController.text.trim() == '' ||
+                        //     _phoneController.text.trim() == '+20') {
+                        //   ScaffoldMessenger.of(context).showSnackBar(
+                        //     SnackBar(
+                        //       content: const Text(
+                        //           'please enter phone number first.'),
+                        //       backgroundColor: Theme.of(context).errorColor,
+                        //     ),
+                        //   );
+                        //   return;
+                        // } else {
+                        //   final koxx = await FirebaseFirestore.instance
+                        //       .collection('customer_details')
+                        //       .where('phone_num',
+                        //           isEqualTo: _phoneController.text.trim())
+                        //       .get();
+
+                        //   if (koxx.docs.isEmpty) {
+                        //     ScaffoldMessenger.of(context).showSnackBar(
+                        //       SnackBar(
+                        //         content: const Text(
+                        //             'this number dont belong to any user account.'),
+                        //         backgroundColor: Theme.of(context).errorColor,
+                        //       ),
+                        //     );
+                        //     return;
+                        //   } else {
+                        setState(() {
+                          knok = true;
+                        });
+                        Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+// AuthScreenUser(
+//                                           _phoneController.text,
+//                                           'result.user!.uid',
+//                                           false,
+//                                           true)
+                                    LoginScreen('customer', true)));
+                        //   String _result = await sendSMS(
+                        //           message: 'Hello, this the test message',
+                        //           recipients: ['+201558559900'],
+                        //           sendDirect: true)
+                        //       .catchError((onError) {
+                        //     print(onError);
+                        //   });
+                        //   print(_result);
+                        //   _sendSMS('Hello, this the test message',
+                        //       ['+201558559900']);
+                        //  }
+                        //  }
+                      },
+                    )
+                  : const SizedBox(),
+
+              // : TextButton(
+              //     //            textColor: Theme.of(context).primaryColor, LoginScreen('customer')
+              //     child: const Text('الرجوع'),
+              //     onPressed: () {
+              //       Navigator.of(context).pushReplacementNamed('/');
+              //     },
+              //   ),
+              widget.koko || widget.supx || widget.userx == 'result.user!.uidx'
+                  ? TextButton(
+                      //            textColor: Theme.of(context).primaryColor, LoginScreen('customer')
+                      child: const Text(
+                        'الرجوع',
+                        style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            color: Color.fromARGB(48, 0, 0, 0)),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pushReplacementNamed('/');
+                      },
+                    )
+                  : const SizedBox(),
+              // TextButton(
+              //   //            textColor: Theme.of(context).primaryColor, LoginScreen('customer')
+              //   child: const Text('splash'),
+              //   onPressed: () {
+              //     Navigator.of(context)
+              //         .pushReplacementNamed(SplashScreen.routeName);
+              //   },
+              // ),
+
+              // loading == true
+              //     ? const CircularProgressIndicator()
+              //     : const SizedBox(),
+              oldo == true
+                  ? const Center(
+                      child: LinearProgressIndicator(
+                      color: Colors.amber,
+                      backgroundColor: Colors.white,
+                    ))
+                  : const SizedBox(),
+
+              AnimatedTextKit(
+                animatedTexts: [
+                  TyperAnimatedText(
+                    '',
+                    textStyle: const TextStyle(
+                      fontSize: 20,
+                      color: Colors.cyanAccent,
+                      overflow: TextOverflow.visible,
+                    ),
+                    speed: const Duration(milliseconds: 100),
+                  )
+                ],
+                // totalRepeatCount: 2,
+                repeatForever: true,
+                onNext: (p0, p1) {
+                  if (!widget.supx && widget.userx != 'result.user!.uidx') {
+                    // _phoneController.text.trim() == ''
+                    //     ? setState(() {
+                    //         _phoneController.text = '+20';
+                    //       })
+                    //     : null;
+                  }
+                  if (widget.supx || widget.userx == 'result.user!.uidx') {
+                    setState(() {
+                      _phoneController.text = widget.phone;
+                    });
+                  }
+                },
+              ),
+              AnimatedTextKit(
+                animatedTexts: [
+                  TyperAnimatedText(
+                    '',
+                    textStyle: const TextStyle(
+                      fontSize: 20,
+                      color: Colors.cyanAccent,
+                      overflow: TextOverflow.visible,
+                    ),
+                    speed: const Duration(seconds: 3),
+                  )
+                ],
+                repeatForever: true,
+                onNext: (p0, p1) {
+                  oldo = widget.isLoading;
+                },
+              ),
+              //  : const Divider(),
+            ],
+          ),
+        ),
+      ),
+      //   ),
+      // ),
+    );
+  }
+}
